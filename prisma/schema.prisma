@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String
+  expiresAt DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id          Int              @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String           @unique
+  profile     String?
+  type        UserType         @default(USER)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  Credentials UserCredential[]
+  Sessions    UserSession[]
+  Medications Medication[]
+  Headache    Headache[]
+}
+
+model UserCredential {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  password  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model UserSession {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String
+  region    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Medication {
+  id        Int                  @id @default(autoincrement())
+  userId    Int
+  name      String
+  dosage    String
+  frequency String
+  type      MedicationType       @default(PILL)
+  usage     MedicationUsage      @default(PREVENTATIVE)
+  isActive  Boolean              @default(true)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  User      User                 @relation(fields: [userId], references: [id])
+  Headaches HeadacheMedication[]
+}
+
+model Headache {
+  id          Int                  @id @default(autoincrement())
+  userId      Int
+  start       DateTime
+  end         DateTime?
+  severity    Int
+  type        HeadacheType         @default(MIGRAINE)
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  User        User                 @relation(fields: [userId], references: [id])
+  Medications HeadacheMedication[]
+}
+
+model HeadacheMedication {
+  id           Int        @id @default(autoincrement())
+  headacheId   Int
+  medicationId Int
+  worked       Boolean    @default(false)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Headache     Headache   @relation(fields: [headacheId], references: [id])
+  Medication   Medication @relation(fields: [medicationId], references: [id])
+}
+
+enum UserType {
+  ADMIN
+  USER
+  DOCTOR
+}
+
+enum MedicationType {
+  PILL
+  TABLET
+  CAPSULE
+  INJECTION
+  CREAM
+  OINTMENT
+  SYRUP
+}
+
+enum MedicationUsage {
+  PREVENTATIVE
+  ABORTIVE
+}
+
+enum HeadacheType {
+  TENSION
+  MIGRAINE
+  CLUSTER
+  SINUS
+  HORMONAL
+  THUNDERCLAP
+  CHRONIC
+}
