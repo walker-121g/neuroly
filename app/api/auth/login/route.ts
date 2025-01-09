@@ -7,6 +7,7 @@ import {
   createRefreshToken,
   checkPassword,
   hashRefreshToken,
+  verifyCsrfToken,
 } from "@/lib/server/auth.server";
 import { handleError } from "@/lib/server/error.server";
 
@@ -16,6 +17,13 @@ import { AppError } from "@/lib/errors/app.error";
 export const POST = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const body = await request.json();
+    const headers = request.headers;
+
+    const csrfToken = headers.get("x-csrf-token");
+    if (!csrfToken || !(await verifyCsrfToken(csrfToken))) {
+      throw AppError.fromMessage("An invalid CSRF token was provided.", 403);
+    }
+
     const { email, password } = await loginSchema.parseAsync(body);
 
     const user = await prisma.user.findUnique({

@@ -14,6 +14,8 @@ export const signupSchema = z
     email: z.string().email(),
     password: passwordField,
     secondaryPassword: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
   })
   .refine(
     (object) => object.password === object.secondaryPassword,
